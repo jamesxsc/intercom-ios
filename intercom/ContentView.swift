@@ -8,12 +8,16 @@
 import SwiftUI
 
 struct ContentView: View {
+    
+    @State
+    var number: String = ""
+    
     var body: some View {
-        VStack {
-            Image(systemName: "globe")
-                .imageScale(.large)
-                .foregroundStyle(.tint)
-            Text("Hello, world!")
+        TabView() {
+            Tab("Dialer", systemImage: "phone.arrow.up.right.fill") {
+                TextField("Number:", text: $number)
+                    
+            }
         }
         .padding()
     }
