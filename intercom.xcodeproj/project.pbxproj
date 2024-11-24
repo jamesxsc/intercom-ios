@@ -6,6 +6,10 @@
 	objectVersion = 77;
 	objects = {
 
+/* Begin PBXBuildFile section */
+		A0BB13752CF3A5E700004FA2 /* TwilioVoice in Frameworks */ = {isa = PBXBuildFile; productRef = A0BB13742CF3A5E700004FA2 /* TwilioVoice */; };
+/* End PBXBuildFile section */
+
 /* Begin PBXFileReference section */
 		A08A0FBF2CF2917F008189E1 /* intercom.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = intercom.app; sourceTree = BUILT_PRODUCTS_DIR; };
 /* End PBXFileReference section */
@@ -23,6 +27,7 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				A0BB13752CF3A5E700004FA2 /* TwilioVoice in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -65,6 +70,7 @@
 			);
 			name = intercom;
 			packageProductDependencies = (
+				A0BB13742CF3A5E700004FA2 /* TwilioVoice */,
 			);
 			productName = intercom;
 			productReference = A08A0FBF2CF2917F008189E1 /* intercom.app */;
@@ -94,6 +100,9 @@
 			);
 			mainGroup = A08A0FB62CF2917F008189E1;
 			minimizedProjectReferenceProxies = 1;
+			packageReferences = (
+				A0BB13732CF3A5E700004FA2 /* XCRemoteSwiftPackageReference "twilio-voice-ios" */,
+			);
 			preferredProjectObjectVersion = 77;
 			productRefGroup = A08A0FC02CF2917F008189E1 /* Products */;
 			projectDirPath = "";
@@ -324,6 +333,25 @@
 			defaultConfigurationName = Release;
 		};
 /* End XCConfigurationList section */
+
+/* Begin XCRemoteSwiftPackageReference section */
+		A0BB13732CF3A5E700004FA2 /* XCRemoteSwiftPackageReference "twilio-voice-ios" */ = {
+			isa = XCRemoteSwiftPackageReference;
+			repositoryURL = "https://github.com/twilio/twilio-voice-ios";
+			requirement = {
+				kind = upToNextMajorVersion;
+				minimumVersion = 6.12.0;
+			};
+		};
+/* End XCRemoteSwiftPackageReference section */
+
+/* Begin XCSwiftPackageProductDependency section */
+		A0BB13742CF3A5E700004FA2 /* TwilioVoice */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = A0BB13732CF3A5E700004FA2 /* XCRemoteSwiftPackageReference "twilio-voice-ios" */;
+			productName = TwilioVoice;
+		};
+/* End XCSwiftPackageProductDependency section */
 	};
 	rootObject = A08A0FB72CF2917F008189E1 /* Project object */;
 }

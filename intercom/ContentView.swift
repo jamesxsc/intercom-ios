@@ -7,19 +7,34 @@
 
 import SwiftUI
 
-struct ContentView: View {
+struct Key : Identifiable {
+    var id: Int
     
-    @State
-    var number: String = ""
+    var number: String
+    var subtitle: String
+    
+    init(_ id: Int,_ number: String, _ subtitle: String) {
+        self.id = id
+        self.number = number
+        self.subtitle = subtitle
+    }
+}
+
+
+struct ContentView: View {
     
     var body: some View {
         TabView() {
             Tab("Dialer", systemImage: "phone.arrow.up.right.fill") {
-                TextField("Number:", text: $number)
-                    
+                DialerTabView()
+            }
+            Tab("Contacts", systemImage: "person.crop.circle.fill") {
+                
+            }
+            Tab("Settings", systemImage: "gear") {
+                
             }
         }
-        .padding()
     }
 }
 
