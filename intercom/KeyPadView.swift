@@ -79,3 +79,7 @@ struct KeyPadView: View {
         .padding(.bottom, 30)
     }
 }
+
+#Preview {
+    KeyPadView(number: .constant("+44 1234567890"), call: { })
+}
