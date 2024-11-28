@@ -48,21 +48,22 @@ struct KeyPadView: View {
                                 .font(.caption)
                                 .fontWeight(.black)
                         }
+                        .frame(width:90, height:90)
                     }
                     .foregroundStyle(.white)
-                    .frame(width:90, height:90)
                     .background(Color.gray.opacity(0.3))
                     .cornerRadius(.infinity)
                 }
+                
                 
                 Spacer()
                 
                 Button(action: {call()}) {
                     Image(systemName: "phone.arrow.up.right.fill")
                         .font(.largeTitle)
+                        .frame(width:90, height:90)
                 }
                 .foregroundStyle(.white)
-                .frame(width:90, height:90)
                 .background(Color.green)
                 .cornerRadius(.infinity)
                 
