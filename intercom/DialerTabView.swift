@@ -9,11 +9,8 @@ import TwilioVoice
 import CallKit
 import AVFoundation
 
-// I think we're close but need to move to viewcontroller class
 // Goes button -> check permissions -> call kit action -> provider? -> (TVO)CallDelegate
 
-// temp
-let accessToken = ""
 
 class DialerTabViewController: NSObject, ObservableObject, CallDelegate, CXProviderDelegate {
         
@@ -22,6 +19,9 @@ class DialerTabViewController: NSObject, ObservableObject, CallDelegate, CXProvi
     var audioDevice = DefaultAudioDevice()
     var activeCall: Call?
     var callKitCompletionCallback: ((Bool) -> Void)? = nil
+    
+    // TODO: get properly
+    let accessToken = Auth.shared.getPhoneClientAccessToken()
     
     override init() {
         super.init()
@@ -49,7 +49,7 @@ class DialerTabViewController: NSObject, ObservableObject, CallDelegate, CXProvi
     @Published
     var number: String = ""
     
-    // CXProviderDelegate
+    // MARK: CXProviderDelegate
     
     func providerDidBegin(_ provider: CXProvider) {
         NSLog("providerDidBegin")
@@ -100,11 +100,11 @@ class DialerTabViewController: NSObject, ObservableObject, CallDelegate, CXProvi
     
     
     func providerDidReset(_ provider: CXProvider) {
-        // todo twilio reauth
+        // TODO: twilio reauth
         NSLog("providerDidReset:")
     }
     
-    // CallDelegate (Twilio)
+    // MARK: CallDelegate (Twilio)
     func callDidStartRinging(call: Call) {
         NSLog("callDidStartRinging:")
     }

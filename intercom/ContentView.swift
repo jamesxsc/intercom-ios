@@ -7,32 +7,25 @@
 
 import SwiftUI
 
-struct Key : Identifiable {
-    var id: Int
-    
-    var number: String
-    var subtitle: String
-    
-    init(_ id: Int,_ number: String, _ subtitle: String) {
-        self.id = id
-        self.number = number
-        self.subtitle = subtitle
-    }
-}
-
 
 struct ContentView: View {
     
+    @StateObject var auth: Auth = Auth.shared
+    
     var body: some View {
-        TabView() {
-            Tab("Dialer", systemImage: "phone.arrow.up.right.fill") {
-                DialerTabView()
-            }
-            Tab("Contacts", systemImage: "person.crop.circle.fill") {
-                
-            }
-            Tab("Settings", systemImage: "gear") {
-                
+        if !auth.isAuthenticated {
+            LoginView()
+        } else {
+            TabView() {
+                Tab("Dialer", systemImage: "phone.arrow.up.right.fill") {
+                    DialerTabView()
+                }
+                Tab("Contacts", systemImage: "person.crop.circle.fill") {
+                    
+                }
+                Tab("Settings", systemImage: "gear") {
+                    
+                }
             }
         }
     }

@@ -7,6 +7,21 @@
 
 import SwiftUI
 
+let keys = [
+    Key(1, "1", " "),
+    Key(2, "2", "ABC"),
+    Key(3, "3", "DEF"),
+    Key(4, "4", "GHI"),
+    Key(5, "5", "JKL"),
+    Key(6, "6", "MNO"),
+    Key(7, "7", "PQRS"),
+    Key(8, "8", "TUV"),
+    Key(9, "9", "WXYZ"),
+    Key(10, "*", " "),
+    Key(0, "0", " "),
+    Key(11, "#", " ")
+]
+
 struct KeyPadView: View {
     
     @Binding
@@ -14,20 +29,7 @@ struct KeyPadView: View {
     
     var call: () -> Void
     
-    let keys = [
-        Key(1, "1", " "),
-        Key(2, "2", "ABC"),
-        Key(3, "3", "DEF"),
-        Key(4, "4", "GHI"),
-        Key(5, "5", "JKL"),
-        Key(6, "6", "MNO"),
-        Key(7, "7", "PQRS"),
-        Key(8, "8", "TUV"),
-        Key(9, "9", "WXYZ"),
-        Key(10, "*", " "),
-        Key(0, "0", " "),
-        Key(11, "#", " ")
-    ]
+    @State var isInLongPress: [Bool] = Array(repeating: false, count: keys.count)
     
     var body: some View {
         VStack() {
@@ -38,7 +40,13 @@ struct KeyPadView: View {
                 .padding(.bottom, 30)
             LazyVGrid(columns: Array(repeating: GridItem(.fixed(90), spacing: 20), count: 3), spacing: 15) {
                 ForEach(keys) { k in
-                    Button(action: { number.append(k.number) }) {
+                    Button(action: {
+                        if (isInLongPress[k.id]) {
+                            isInLongPress[k.id] = false
+                        } else {
+                            number.append(k.number)
+                        }
+                    }) {
                         VStack() {
                             Text(k.number)
                                 .font(.largeTitle)
@@ -53,6 +61,15 @@ struct KeyPadView: View {
                     .foregroundStyle(.white)
                     .background(Color.gray.opacity(0.3))
                     .cornerRadius(.infinity)
+                    .simultaneousGesture(LongPressGesture(minimumDuration: 0.5, maximumDistance: 50.0)
+                        .onEnded { _ in
+                            // Prevent executing other handler as well
+                            isInLongPress[k.id] = true
+                            
+                            if k.id == 0 && number.isEmpty { // Only allow placing a + at the start
+                                number.append("+")
+                            }
+                    })
                 }
                 
                 
