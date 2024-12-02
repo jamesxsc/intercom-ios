@@ -10,21 +10,23 @@ import SwiftUI
 
 struct ContentView: View {
     
-    @StateObject var auth: Auth = Auth.shared
+    @StateObject var auth: Auth = .shared
     
     var body: some View {
-        if !auth.isAuthenticated {
-            LoginView()
-        } else {
-            TabView() {
-                Tab("Dialer", systemImage: "phone.arrow.up.right.fill") {
-                    DialerTabView()
-                }
-                Tab("Contacts", systemImage: "person.crop.circle.fill") {
-                    
-                }
-                Tab("Settings", systemImage: "gear") {
-                    
+        ZStack {
+            if !auth.isAuthenticated {
+                LoginView()
+            } else {
+                TabView() {
+                    Tab("Dialer", systemImage: "phone.arrow.up.right.fill") {
+                        DialerTabView()
+                    }
+                    Tab("Contacts", systemImage: "person.crop.circle.fill") {
+                        
+                    }
+                    Tab("Settings", systemImage: "gear") {
+                        
+                    }
                 }
             }
         }

@@ -24,8 +24,13 @@ let keys = [
 
 struct KeyPadView: View {
     
+    @StateObject var auth: Auth = Auth.shared
+
     @Binding
     var number: String
+    
+    @Binding
+    var identity: String
     
     var call: () -> Void
     
@@ -33,7 +38,20 @@ struct KeyPadView: View {
     
     var body: some View {
         VStack() {
+            Picker(selection: $identity) {
+                if identity == "" {
+                   Text("Select Identity").tag("")
+                 }
+                
+                ForEach(auth.user!.phoneNumbers) { number in
+                    Text(number.number).tag(number.number)
+                }
+            } label: {
+                Text("Identity")
+            }
+            .pickerStyle(.menu)
             Spacer()
+
             Text(number.isEmpty ? " " : number)
                 .font(.largeTitle)
                 .fontWeight(.black)
@@ -99,5 +117,5 @@ struct KeyPadView: View {
 }
 
 #Preview {
-    KeyPadView(number: .constant("+44 1234567890"), call: { })
+    KeyPadView(number: .constant("+44 1234567890"), identity: .constant("+44 1234567890"), call: { })
 }

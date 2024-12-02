@@ -15,16 +15,26 @@ import AVFoundation
 class DialerTabViewController: NSObject, ObservableObject, CallDelegate, CXProviderDelegate {
         
     let callKitCallController = CXCallController()
+    let auth: Auth = .shared
     var callKitProvider: CXProvider?
     var audioDevice = DefaultAudioDevice()
     var activeCall: Call?
     var callKitCompletionCallback: ((Bool) -> Void)? = nil
-    
-    // TODO: get properly
-    let accessToken = Auth.shared.getPhoneClientAccessToken()
-    
+        
     override init() {
         super.init()
+        
+        // TODO: extract identity logic
+        auth.getPhoneClientAccessToken("+442045380800") { token in
+            guard let token = token else {
+                // TODO: Handle
+                NSLog("Error obtaining access token")
+                return
+            }
+            
+            self.phoneClientAccessToken = token
+        }
+        
         TwilioVoiceSDK.audioDevice = audioDevice
         let defaultLogger = TwilioVoiceSDK.logger
                 if let params = LogParameters.init(module:TwilioVoiceSDK.LogModule.platform , logLevel: TwilioVoiceSDK.LogLevel.debug, message: "The default logger is used for app logs") {
@@ -48,6 +58,11 @@ class DialerTabViewController: NSObject, ObservableObject, CallDelegate, CXProvi
     
     @Published
     var number: String = ""
+    @Published
+    var identity: String = "" // TODO: store a default in userdefaults? or maybe not since it will need checking
+    @Published
+    var phoneClientAccessToken: String?
+
     
     // MARK: CXProviderDelegate
     
@@ -127,7 +142,7 @@ class DialerTabViewController: NSObject, ObservableObject, CallDelegate, CXProvi
     }
     
     func callDidDisconnect(call: Call, error: (any Error)?) {
-        
+        NSLog("callDidDisconnect:")
     }
     
     func callIsReconnecting(call: Call, error: any Error) {
@@ -135,6 +150,7 @@ class DialerTabViewController: NSObject, ObservableObject, CallDelegate, CXProvi
     }
     
     func callDidFailToConnect(call: Call, error: any Error) {
+        NSLog("callDidFailToConnect:")
         if let completion = callKitCompletionCallback {
             completion(false)
         }
@@ -182,7 +198,7 @@ class DialerTabViewController: NSObject, ObservableObject, CallDelegate, CXProvi
     
     func performVoiceCall(uuid: UUID, completionHandler: @escaping (Bool) -> Void) {
         NSLog("performVoiceCall:")
-        let connectOptions = ConnectOptions(accessToken: accessToken) { builder in
+        let connectOptions = ConnectOptions(accessToken: phoneClientAccessToken!) { builder in
             builder.uuid = uuid
             builder.params = ["to": self.number]
         }
@@ -216,13 +232,14 @@ class DialerTabViewController: NSObject, ObservableObject, CallDelegate, CXProvi
 
     func call() {
         print("calling \(number)")
+        // TODO: validate number AND identity here on the frontend
         
         checkRecordPermission { permissionGranted in
             
             guard !permissionGranted else {
                 let uuid = UUID()
                 
-                self.performStartCallAction(uuid: uuid, handle: "(name of remote shown)")
+                self.performStartCallAction(uuid: uuid, handle: self.number)
                 return
             }
             
@@ -239,8 +256,11 @@ struct DialerTabView: View {
     
     
     var body: some View {
-        
-        KeyPadView(number: $viewController.number, call: viewController.call)
+        if ((viewController.phoneClientAccessToken) != nil) {
+            KeyPadView(number: $viewController.number, identity: $viewController.identity, call: viewController.call)
+        } else {
+            LoadingView()
+        }
     }
 }
 

@@ -18,14 +18,15 @@ struct LoginView: View {
     
     func login() {
         error = false
+        // TODO: need a loading state, ideally do with loading from auth, and disable button at least
         auth.login(username: username, password: password) { result in
-            error = result
+            error = !result
         }
     }
     
     var body: some View {
         // TODO: constraint warnings on input: may be an us error may be a system error
-        VStack {
+        Form {
             Text("Login to Intercom")
                 .font(.largeTitle)
             TextField("Username", text: $username)
