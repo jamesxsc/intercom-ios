@@ -20,8 +20,10 @@ class Auth: ObservableObject {
     // TODO: move to exposing a isloaded variable at least alongside this
     @Published var isAuthenticated: Bool = false
     @Published var user: User?
+    @Published var loading: Bool = true
 
     private init() {
+        isAuthenticated = getCredentials().accessToken != nil
         if (isAuthenticated) {
             fetchUser()
         }
@@ -73,6 +75,7 @@ class Auth: ObservableObject {
             
             DispatchQueue.main.async {
                 self.user = user
+                self.loading = false
                 NSLog("\(self.user!)")
             }
         }

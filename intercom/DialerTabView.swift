@@ -8,6 +8,7 @@ import SwiftUI
 import TwilioVoice
 import CallKit
 import AVFoundation
+import AVFAudio
 
 // Goes button -> check permissions -> call kit action -> provider? -> (TVO)CallDelegate
 
@@ -20,27 +21,16 @@ class DialerTabViewController: NSObject, ObservableObject, CallDelegate, CXProvi
     var audioDevice = DefaultAudioDevice()
     var activeCall: Call?
     var callKitCompletionCallback: ((Bool) -> Void)? = nil
-        
+            
     override init() {
         super.init()
-        
-        // TODO: extract identity logic
-        auth.getPhoneClientAccessToken("+442045380800") { token in
-            guard let token = token else {
-                // TODO: Handle
-                NSLog("Error obtaining access token")
-                return
-            }
-            
-            self.phoneClientAccessToken = token
-        }
-        
+
         TwilioVoiceSDK.audioDevice = audioDevice
         let defaultLogger = TwilioVoiceSDK.logger
                 if let params = LogParameters.init(module:TwilioVoiceSDK.LogModule.platform , logLevel: TwilioVoiceSDK.LogLevel.debug, message: "The default logger is used for app logs") {
                     defaultLogger.log(params: params)
                 }
-        let config = CXProviderConfiguration(localizedName: "Intercom")
+        let config = CXProviderConfiguration()
         config.maximumCallGroups = 2
         config.maximumCallsPerCallGroup = 1
         callKitProvider = CXProvider(configuration: config)
@@ -59,7 +49,24 @@ class DialerTabViewController: NSObject, ObservableObject, CallDelegate, CXProvi
     @Published
     var number: String = ""
     @Published
-    var identity: String = "" // TODO: store a default in userdefaults? or maybe not since it will need checking
+    var identity: String = "" {
+        didSet {
+            auth.getPhoneClientAccessToken(identity) { token in
+                guard let token = token else {
+                    // TODO: Handle/state inform user
+                    NSLog("Error obtaining access token")
+                    return
+                }
+                
+                NSLog("obtained access token")
+                self.canCall = true
+                
+                self.phoneClientAccessToken = token
+            }
+            
+        }
+    }
+    @Published var canCall: Bool = false
     @Published
     var phoneClientAccessToken: String?
 
@@ -135,6 +142,7 @@ class DialerTabViewController: NSObject, ObservableObject, CallDelegate, CXProvi
             callKitCompletionCallback(true)
         }
         // todo still need to propogate some sort of ui update, probably a new view
+        // and consider all of the delegate's handlers
     }
     
     func callDidReconnect(call: Call) {
@@ -213,20 +221,8 @@ class DialerTabViewController: NSObject, ObservableObject, CallDelegate, CXProvi
     }
     
     func checkRecordPermission(_ completion: @escaping (_ permissionGranted: Bool) -> Void) {
-        // todo fix deprecated avfoundation usage
-        let permissionStatus = AVAudioSession.sharedInstance().recordPermission
-        
-        switch permissionStatus {
-        case .granted:
-            completion(true)
-        case .denied:
-            completion(false)
-        case .undetermined:
-            AVAudioSession.sharedInstance().requestRecordPermission { granted in
-                completion(granted)
-            }
-        default:
-            completion(false)
+        AVAudioApplication.requestRecordPermission() { granted in
+            completion(granted)
         }
     }
 
@@ -254,12 +250,11 @@ struct DialerTabView: View {
     
     @ObservedObject var viewController = DialerTabViewController()
     
-    
     var body: some View {
-        if ((viewController.phoneClientAccessToken) != nil) {
-            KeyPadView(number: $viewController.number, identity: $viewController.identity, call: viewController.call)
-        } else {
+        if (viewController.auth.loading) {
             LoadingView()
+        } else {
+            KeyPadView(number: $viewController.number, identity: $viewController.identity, call: viewController.call, canCall: $viewController.canCall)
         }
     }
 }
