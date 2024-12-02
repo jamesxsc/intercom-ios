@@ -34,9 +34,6 @@ struct KeyPadView: View {
     
     var call: () -> Void
     
-    @Binding
-    var canCall: Bool
-    
     @State var isInLongPress: [Bool] = Array(repeating: false, count: keys.count)
     
     var body: some View {
@@ -101,7 +98,6 @@ struct KeyPadView: View {
                         .font(.largeTitle)
                         .frame(width:90, height:90)
                 }
-                .disabled(canCall)
                 .foregroundStyle(.white)
                 .background(Color.green)
                 .cornerRadius(.infinity)
@@ -121,5 +117,5 @@ struct KeyPadView: View {
 }
 
 #Preview {
-    KeyPadView(number: .constant("+44 1234567890"), identity: .constant("+44 1234567890"), call: { }, canCall: .constant(true))
+    KeyPadView(number: .constant("+44 1234567890"), identity: .constant("+44 1234567890"), call: { })
 }

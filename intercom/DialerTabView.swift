@@ -59,14 +59,12 @@ class DialerTabViewController: NSObject, ObservableObject, CallDelegate, CXProvi
                 }
                 
                 NSLog("obtained access token")
-                self.canCall = true
                 
                 self.phoneClientAccessToken = token
             }
             
         }
     }
-    @Published var canCall: Bool = false
     @Published
     var phoneClientAccessToken: String?
 
@@ -228,6 +226,11 @@ class DialerTabViewController: NSObject, ObservableObject, CallDelegate, CXProvi
 
     func call() {
         print("calling \(number)")
+        
+        if identity == "" {
+            NSLog("identity is empty")
+            return
+        }
         // TODO: validate number AND identity here on the frontend
         
         checkRecordPermission { permissionGranted in
@@ -254,7 +257,7 @@ struct DialerTabView: View {
         if (viewController.auth.loading) {
             LoadingView()
         } else {
-            KeyPadView(number: $viewController.number, identity: $viewController.identity, call: viewController.call, canCall: $viewController.canCall)
+            KeyPadView(number: $viewController.number, identity: $viewController.identity, call: viewController.call)
         }
     }
 }

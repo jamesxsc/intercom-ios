@@ -6,7 +6,7 @@
 //
 
 // See UserDetailDto.java
-struct User: Codable {
+struct UserDetailDto: Codable {
     let email: String
     var phoneNumbers: [PhoneNumber]
 }

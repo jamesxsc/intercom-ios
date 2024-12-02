@@ -19,7 +19,7 @@ class Auth: ObservableObject {
     static let shared: Auth = Auth()
     // TODO: move to exposing a isloaded variable at least alongside this
     @Published var isAuthenticated: Bool = false
-    @Published var user: User?
+    @Published var user: UserDetailDto?
     @Published var loading: Bool = true
 
     private init() {
@@ -66,7 +66,7 @@ class Auth: ObservableObject {
                 return
             }
             
-            let user = try? JSONDecoder().decode(User.self, from: data)
+            let user = try? JSONDecoder().decode(UserDetailDto.self, from: data)
             
             guard let user else {
                 NSLog("Failed to decode user object from API")
@@ -97,12 +97,9 @@ class Auth: ObservableObject {
     
     // TODO: this is pretty ugly, let's tidy it up a bit
     func login(username: String, password: String, completionHandler: @escaping (Bool) -> Void) {
-        var components = URLComponents(string: "https://intercom.xsc.co.uk/auth/login?")!
-        components.queryItems = [
-            URLQueryItem(name: "username", value: username),
-            URLQueryItem(name: "password", value: password)
-        ]
-        guard let url = components.url else {
+        let url = URL(string: "https://intercom.xsc.co.uk/auth/login")
+        
+        guard let url = url else {
             NSLog("Invalid URL")
             DispatchQueue.main.async {
                 completionHandler(false)
@@ -112,6 +109,18 @@ class Auth: ObservableObject {
         
         var urlRequest = URLRequest(url: url)
         urlRequest.httpMethod = "POST"
+        
+        let creds = try? JSONEncoder().encode(["username": username, "password": password])
+
+        guard let creds = creds else {
+            NSLog("Failed to encode credentials as JSON body")
+            DispatchQueue.main.async {
+                completionHandler(false)
+            }
+            return
+        }
+        
+        urlRequest.httpBody = creds
         
         let dataTask = URLSession.shared.dataTask(with: urlRequest) { data, response, error in
             if error != nil {
@@ -138,8 +147,17 @@ class Auth: ObservableObject {
                 return
             }
             
-            // TODO: consider JSON bodies instead
-            let credentials = Credentials(accessToken: String(data: data, encoding: .utf8))
+            let returned = try? JSONDecoder().decode(JWTTokenDto.self, from: data)
+            
+            guard let accessToken = returned?.accessToken else {
+                    NSLog("Failed to decode JWT access token")
+                    DispatchQueue.main.async {
+                        completionHandler(false)
+                    }
+                    return
+            }
+            
+            let credentials = Credentials(accessToken: accessToken)
             
             NSLog("Setting credentials")
             DispatchQueue.main.async {
@@ -279,10 +297,18 @@ class Auth: ObservableObject {
                 return
             }
             
-            let phoneClientToken = String(data: data, encoding: .utf8)
+            let dto = try? JSONDecoder().decode(PhoneClientAccessTokenDto.self, from: data)
+            
+            guard let token = dto?.phoneClientAccessToken else {
+                    NSLog("Error decoding JSON")
+                    DispatchQueue.main.async {
+                        handler(nil)
+                    }
+                    return
+            }
             
             DispatchQueue.main.async {
-                handler(phoneClientToken)
+                handler(token)
             }
         }
         dataTask.resume()
