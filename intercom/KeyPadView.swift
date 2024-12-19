@@ -18,7 +18,7 @@ let keys = [
     Key(8, "8", "TUV"),
     Key(9, "9", "WXYZ"),
     Key(10, "*", " "),
-    Key(0, "0", " "),
+    Key(0, "0", "+"),
     Key(11, "#", " ")
 ]
 
@@ -46,6 +46,8 @@ struct KeyPadView: View {
                 ForEach(auth.user!.phoneNumbers) { number in
                     Text(number.number).tag(number.number)
                 }
+                
+                Text("JC").tag("jc")
             } label: {
                 Text("Identity")
             }

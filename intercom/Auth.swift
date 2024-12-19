@@ -109,6 +109,7 @@ class Auth: ObservableObject {
         
         var urlRequest = URLRequest(url: url)
         urlRequest.httpMethod = "POST"
+        urlRequest.setValue("application/json", forHTTPHeaderField: "Content-Type")
         
         let creds = try? JSONEncoder().encode(["username": username, "password": password])
 
@@ -131,6 +132,9 @@ class Auth: ObservableObject {
                 return
             }
             
+            // Currently there is a singular failure state
+            // If we wish to distinguish a network or server error from invalid credentials
+            // it is possible to filter by response code 403 (FORBIDDEN)
             if let repsonse = response as? HTTPURLResponse, repsonse.statusCode != 200 {
                 NSLog("Invalid status code: \(repsonse.statusCode)")
                 DispatchQueue.main.async {
