@@ -44,6 +44,11 @@ class DialerTabViewController: NSObject, ObservableObject, CallDelegate, CXProvi
         if let provider = callKitProvider {
             provider.setDelegate(self, queue: nil)
         }
+        
+        // Configure push notifications
+        self.voipRegistry = PKPushRegistry(queue: nil)
+        self.voipRegistry!.delegate = self
+        self.voipRegistry!.desiredPushTypes = [.voIP]
     }
     
     deinit {
@@ -54,33 +59,10 @@ class DialerTabViewController: NSObject, ObservableObject, CallDelegate, CXProvi
     
     
     @Published
+    var destination: String = ""
+    @Published
     var number: String = ""
-    @Published
-    var identity: String = "" {
-        didSet {
-            auth.getPhoneClientAccessToken(identity) { token in
-                guard let token = token else {
-                    // TODO: Handle/state inform user
-                    NSLog("Error obtaining access token")
-                    return
-                }
-                
-                NSLog("obtained access token")
-                
-                self.phoneClientAccessToken = token
-                
-                // Update push registry since identity is changed
-                self.voipRegistry = PKPushRegistry(queue: nil)
-                self.voipRegistry!.delegate = self
-                self.voipRegistry!.desiredPushTypes = [.voIP]
-                
-            }
-            
-        }
-    }
-    @Published
-    var phoneClientAccessToken: String?
-
+    
     // MARK: PKPushRegistryDelegate
     
     func pushRegistry(_ registry: PKPushRegistry, didUpdate pushCredentials: PKPushCredentials, for type: PKPushType) {
@@ -88,21 +70,12 @@ class DialerTabViewController: NSObject, ObservableObject, CallDelegate, CXProvi
         
         let cachedDeviceToken = pushCredentials.token
 
-        // temporarily always register since this doesnt capture identity change
-//        guard registrationRequired() || UserDefaults.standard.data(forKey: keyCachedDeviceToken) != cachedDeviceToken else {
+        guard registrationRequired() || UserDefaults.standard.data(forKey: keyCachedDeviceToken) != cachedDeviceToken else {
             // No need to register
-//            return
-//        }
-        
-        // Do register
-        // TODO: Handle registering multiple identities - server or client? take care that access token may be null! possibly move number layer to server and hold a unique identity for each client?
-        // mind use of the token in the other handler below as well
-        guard let phoneClientAccessToken else {
-            NSLog("Attempted to register for push notifications before setting access token")
             return
         }
         
-        TwilioVoiceSDK.register(accessToken: phoneClientAccessToken, deviceToken: cachedDeviceToken) { error in
+        TwilioVoiceSDK.register(accessToken: auth.phoneClientAccessToken!, deviceToken: cachedDeviceToken) { error in
             if let error {
                 NSLog("error registering for push notifications: \(error.localizedDescription)")
             } else {
@@ -141,7 +114,7 @@ class DialerTabViewController: NSObject, ObservableObject, CallDelegate, CXProvi
             return
         }
         
-        TwilioVoiceSDK.unregister(accessToken: phoneClientAccessToken!, deviceToken: deviceToken) { error in
+        TwilioVoiceSDK.unregister(accessToken: auth.phoneClientAccessToken!, deviceToken: deviceToken) { error in
             if let error = error {
                 NSLog("Error unregistering push: \(error.localizedDescription)")
             } else {
@@ -392,11 +365,11 @@ class DialerTabViewController: NSObject, ObservableObject, CallDelegate, CXProvi
         
     func performVoiceCall(uuid: UUID, completionHandler: @escaping (Bool) -> Void) {
         NSLog("performVoiceCall:")
-        let connectOptions = ConnectOptions(accessToken: phoneClientAccessToken!) { builder in
+        let connectOptions = ConnectOptions(accessToken: auth.phoneClientAccessToken!) { builder in
             builder.uuid = uuid
             builder.params = [
-                "destination": self.number,
-                "identity": self.identity
+                "destination": self.destination,
+                "number": self.number
             ]
         }
         
@@ -433,15 +406,15 @@ class DialerTabViewController: NSObject, ObservableObject, CallDelegate, CXProvi
     }
 
     func call() {
-        print("calling \(number)")
+        print("calling \(destination)")
 
         // To save duplicated, and potentially conflicting logic, the rest of the number validation occurs on the backend
-        if identity == "" {
+        if number == "" {
             NSLog("identity is empty")
             return
         }
         
-        if number == "" {
+        if destination == "" {
             NSLog("number is empty")
             return
         }
@@ -450,7 +423,7 @@ class DialerTabViewController: NSObject, ObservableObject, CallDelegate, CXProvi
             guard !permissionGranted else {
                 let uuid = UUID()
                 
-                self.performStartCallAction(uuid: uuid, handle: self.number)
+                self.performStartCallAction(uuid: uuid, handle: self.destination)
                 return
             }
         }
@@ -463,11 +436,7 @@ struct DialerTabView: View {
     @ObservedObject var viewController = DialerTabViewController()
     
     var body: some View {
-        if (viewController.auth.loading) {
-            LoadingView()
-        } else {
-            KeyPadView(number: $viewController.number, identity: $viewController.identity, call: viewController.call)
-        }
+        KeyPadView(destination: $viewController.destination, number: $viewController.number, call: viewController.call)
     }
 }
 

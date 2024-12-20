@@ -20,6 +20,7 @@ class Auth: ObservableObject {
     // TODO: move to exposing a isloaded variable at least alongside this
     @Published var isAuthenticated: Bool = false
     @Published var user: UserDetailDto?
+    @Published var phoneClientAccessToken: String?
     @Published var loading: Bool = true
 
     private init() {
@@ -75,8 +76,19 @@ class Auth: ObservableObject {
             
             DispatchQueue.main.async {
                 self.user = user
-                self.loading = false
                 NSLog("\(self.user!)")
+                
+                // After fetching user, we must populate phoneClientAccessToken
+                self.getPhoneClientAccessToken() { token in
+                    
+                    // TODO: if token is nil then handle error
+                    
+                    DispatchQueue.main.async {
+                        NSLog("Got phone client access token")
+                        self.phoneClientAccessToken = token
+                        self.loading = false
+                    }
+                }
             }
         }
         task.resume()
@@ -93,6 +105,8 @@ class Auth: ObservableObject {
         let status = SecItemDelete(query as CFDictionary)
         
         return status == errSecSuccess || status == errSecItemNotFound
+        
+        // TODO Clear the UserDefaults from other info, in particular device token and binding date for push notifications
     }
     
     // TODO: this is pretty ugly, let's tidy it up a bit
@@ -251,7 +265,7 @@ class Auth: ObservableObject {
     }
     
     // MARK: Phone Client Endpoints
-    func getPhoneClientAccessToken(_ identity: String, _ handler: @escaping (String?) -> Void) {
+    func getPhoneClientAccessToken(_ handler: @escaping (String?) -> Void) {
         guard let accessToken = getCredentials().accessToken else {
             NSLog("API method called without authentication")
             DispatchQueue.main.async {
@@ -260,11 +274,9 @@ class Auth: ObservableObject {
             return
         }
         
-        var components = URLComponents(string: "https://intercom.xsc.co.uk/client/accessToken?")!
-        components.queryItems = [
-            URLQueryItem(name: "identity", value: identity),
-        ]
-        guard let url = components.url else {
+        let url = URL(string: "https://intercom.xsc.co.uk/client/accessToken?")
+        
+        guard let url = url else {
             NSLog("Invalid URL")
             DispatchQueue.main.async {
                 handler(nil)

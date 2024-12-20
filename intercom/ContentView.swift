@@ -16,6 +16,9 @@ struct ContentView: View {
         ZStack {
             if !auth.isAuthenticated {
                 LoginView()
+            } else if auth.loading {
+                // Loading view is here because inits in tabs depend on user
+                LoadingView()
             } else {
                 TabView() {
                     Tab("Dialer", systemImage: "phone.arrow.up.right.fill") {

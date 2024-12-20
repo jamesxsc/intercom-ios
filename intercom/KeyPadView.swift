@@ -27,10 +27,10 @@ struct KeyPadView: View {
     @StateObject var auth: Auth = Auth.shared
 
     @Binding
-    var number: String
+    var destination: String
     
     @Binding
-    var identity: String
+    var number: String
     
     var call: () -> Void
     
@@ -38,23 +38,21 @@ struct KeyPadView: View {
     
     var body: some View {
         VStack() {
-            Picker(selection: $identity) {
-                if identity == "" {
-                   Text("Select Identity").tag("")
+            Picker(selection: $number) {
+                if number == "" {
+                   Text("Select Number").tag("")
                  }
                 
                 ForEach(auth.user!.phoneNumbers) { number in
                     Text(number.number).tag(number.number)
                 }
-                
-                Text("JC").tag("jc")
             } label: {
                 Text("Identity")
             }
             .pickerStyle(.menu)
             Spacer()
 
-            Text(number.isEmpty ? " " : number)
+            Text(destination.isEmpty ? " " : destination)
                 .font(.largeTitle)
                 .fontWeight(.black)
                 .padding(.bottom, 30)
@@ -64,7 +62,7 @@ struct KeyPadView: View {
                         if (isInLongPress[k.id]) {
                             isInLongPress[k.id] = false
                         } else {
-                            number.append(k.number)
+                            destination.append(k.number)
                         }
                     }) {
                         VStack() {
@@ -86,8 +84,8 @@ struct KeyPadView: View {
                             // Prevent executing other handler as well
                             isInLongPress[k.id] = true
                             
-                            if k.id == 0 && number.isEmpty { // Only allow placing a + at the start
-                                number.append("+")
+                            if k.id == 0 && destination.isEmpty { // Only allow placing a + at the start
+                                destination.append("+")
                             }
                     })
                 }
@@ -105,8 +103,8 @@ struct KeyPadView: View {
                 .cornerRadius(.infinity)
                 
                 
-                if (!number.isEmpty) {
-                    Button(action: {number.removeLast()}) {
+                if (!destination.isEmpty) {
+                    Button(action: {destination.removeLast()}) {
                         Image(systemName: "delete.left.fill")
                             .font(.largeTitle)
                     }
@@ -119,5 +117,5 @@ struct KeyPadView: View {
 }
 
 #Preview {
-    KeyPadView(number: .constant("+44 1234567890"), identity: .constant("+44 1234567890"), call: { })
+    KeyPadView(destination: .constant("+44 1234567890"), number: .constant("+44 1234567890"), call: { })
 }
